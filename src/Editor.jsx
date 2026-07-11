@@ -2,20 +2,25 @@ import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Collaboration from '@tiptap/extension-collaboration'
 import * as Y from 'yjs'
-import { useMemo } from 'react'
+import { WebsocketProvider } from 'y-websocket'
+import { useMemo, useEffect } from 'react'
 
 export default function Editor() {
-  // Create a Yjs document — this holds the shared state
   const ydoc = useMemo(() => new Y.Doc(), [])
+
+  const provider = useMemo(
+    () => new WebsocketProvider('ws://localhost:1234', 'my-document-room', ydoc),
+    [ydoc]
+  )
+
+  useEffect(() => {
+    return () => provider.destroy()
+  }, [provider])
 
   const editor = useEditor({
     extensions: [
-      StarterKit.configure({
-        history: false, // Yjs handles undo/redo instead of Tiptap's default
-      }),
-      Collaboration.configure({
-        document: ydoc,
-      }),
+      StarterKit.configure({ history: false }),
+      Collaboration.configure({ document: ydoc }),
     ],
   })
 
